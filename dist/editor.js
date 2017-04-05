@@ -4,75 +4,43 @@
  *  Created at 2017/3/8
  */
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-const React = require("react");
-class Editor extends React.Component {
-    componentDidMount() {
+var React = require("react");
+window["codeStorage"] = '';
+window["readOnly"] = true;
+var Editor = (function (_super) {
+    __extends(Editor, _super);
+    function Editor() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Editor.prototype.componentDidMount = function () {
+        console.log('mounted');
         window["editor"] = window["ace"].edit("editor");
         window["editor"].getSession().setMode("ace/mode/assembly_x86");
         window["editor"].setTheme("ace/theme/tomorrow");
-    }
-    render() {
-        return (React.createElement("div", { id: "editor" }, window["codeStorage"] ? window["codeStorage"] : `add $t1, $t2, $t3;
-                addu $t1, $t2, $t3;
-                and $t1, $t2, $t3;
-                sub $t1, $t2, $t3;
-                subu $t1, $t2, $t3;
-                xor $t1, $t2, $t3;
-                nor $t1, $t2, $t3;
-                or $t1, $t2, $t3;
-                slt $t1, $t2, $t3 ;
-                sltu $t1, $t2, $t3;
-
-                sllv $t1, $t2, $t3;
-                srav $t1, $t2, $t3;
-                srlv $t1, $t2, $t3;
-
-                sll $t1, $t2, 1;
-                sra $t1, $t2, 1;
-                srl $t1, $t2, 1;
-
-                ori $t1, $t2, 1;
-                addi $t1, $t2, -1;
-                addiu $t1, $t2, -1;
-                andi $t1, $t2, 1;
-                xori $t1, $t2, 1;
-                slti $t1, $t2, -1;
-                sltiu $t1, $t2, -1;
-
-                lb $t1,-16($t2);
-                lbu $t1,-16($t2);
-                lh $t1,-16($t2);
-                lhu $t1,-16($t2);
-                lw $t1,-16($t2);
-                sb $t1,-16($t2);
-                sh $t1,-16($t2);
-                sw $t1,-16($t2);
-
-                beq $t1,$t2,flag;
-                bne $t1,$t2,flag;
-                blez $t1,flag;
-                bgez $t1,flag;
-                bltz $t1,flag;
-                bgtz $t1;
-                div $t1, $t2;
-                divu $t1, $t2;
-                mult $t1, $t2;
-                multu $t1, $t2;
-                jalr $t1, $t2;
-                move $t1, $t2;
-                mfhi $t1;
-                mflo $t1;
-
-
-
-                flag:
-                mthi $t1;
-                mtlo $t1;
-                jr $t1;
-                j flag;
-                jal flag;`));
-    }
-}
+        if (window["readOnly"]) {
+            window["editor"].setReadOnly(true);
+        }
+        else {
+            window["editor"].setReadOnly(false);
+        }
+    };
+    Editor.prototype.render = function () {
+        console.log('r1');
+        console.log('r2');
+        return (React.createElement("div", { id: "editor" }, window["codeStorage"]));
+    };
+    return Editor;
+}(React.Component));
 exports.Editor = Editor;
 //# sourceMappingURL=editor.js.map

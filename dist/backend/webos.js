@@ -1,14 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const instruction_1 = require("./assembler/instruction");
+var instruction_1 = require("./assembler/instruction");
 /**
  *  @file
  *  @author zcy <zurl@live.com>
  *  Created at 2017/3/4
  */
-class WebOS {
-    syscall(that, next_task) {
-        const code = that.register.getUint32(instruction_1.Register["v0"] * 4);
+var WebOS = (function () {
+    function WebOS() {
+    }
+    WebOS.prototype.syscall = function (that, next_task) {
+        var code = that.register.getUint32(instruction_1.Register["v0"] * 4);
         switch (code) {
             case 0x1:
                 console.log(instruction_1.Register["a0"]);
@@ -20,7 +22,8 @@ class WebOS {
             default:
                 return false;
         }
-    }
-}
+    };
+    return WebOS;
+}());
 exports.WebOS = WebOS;
 //# sourceMappingURL=webos.js.map

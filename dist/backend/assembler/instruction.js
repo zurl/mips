@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     asm template lang
     ['s','f','g'
  */
-const OpCodeRRR = {
+var OpCodeRRR = {
     "add": 0x00,
     "addu": 0x00,
     "sub": 0x00,
@@ -33,7 +33,7 @@ const OpCodeRRR = {
     "__mtlo": 0x00,
     "__jr": 0x00,
 };
-const OpCodeRRN = {
+var OpCodeRRN = {
     "j": 0x2,
     "beq": 0x4,
     "bne": 0x5,
@@ -71,7 +71,7 @@ exports.Register = {
     "$hi": 33,
     "$lo": 34
 };
-const FunctArith = {
+var FunctArith = {
     "add": 0x20,
     "addu": 0x21,
     "sub": 0x22,
@@ -100,40 +100,40 @@ const FunctArith = {
     "__divu": 0x1b,
     "__jr": 0x8,
 };
-const PseudoRR = {
-    "move": ($1, $2) => buildAsmInstructionRRR("addu", $1, "$zero", $2),
-    "div": ($1, $2) => buildAsmInstructionRRR("__div", "$zero", $1, $2),
-    "divu": ($1, $2) => buildAsmInstructionRRR("__divu", "$zero", $1, $2),
-    "mult": ($1, $2) => buildAsmInstructionRRR("__mult", "$zero", $1, $2),
-    "multu": ($1, $2) => buildAsmInstructionRRR("__multu", "$zero", $1, $2),
-    "jalr": ($1, $2) => buildAsmInstructionRRR("__jalr", $2, $1, "$zero"),
+var PseudoRR = {
+    "move": function ($1, $2) { return buildAsmInstructionRRR("addu", $1, "$zero", $2); },
+    "div": function ($1, $2) { return buildAsmInstructionRRR("__div", "$zero", $1, $2); },
+    "divu": function ($1, $2) { return buildAsmInstructionRRR("__divu", "$zero", $1, $2); },
+    "mult": function ($1, $2) { return buildAsmInstructionRRR("__mult", "$zero", $1, $2); },
+    "multu": function ($1, $2) { return buildAsmInstructionRRR("__multu", "$zero", $1, $2); },
+    "jalr": function ($1, $2) { return buildAsmInstructionRRR("__jalr", $2, $1, "$zero"); },
 };
-const PseudoR = {
-    "mfhi": ($1) => buildAsmInstructionRRR("__mfhi", $1, "$zero", "$zero"),
-    "mflo": ($1) => buildAsmInstructionRRR("__mflo", $1, "$zero", "$zero"),
-    "mthi": ($1) => buildAsmInstructionRRR("__mthi", "$zero", $1, "$zero"),
-    "mtlo": ($1) => buildAsmInstructionRRR("__mtlo", "$zero", $1, "$zero"),
-    "jr": ($1) => buildAsmInstructionRRR("__jr", "$zero", $1, "$zero"),
+var PseudoR = {
+    "mfhi": function ($1) { return buildAsmInstructionRRR("__mfhi", $1, "$zero", "$zero"); },
+    "mflo": function ($1) { return buildAsmInstructionRRR("__mflo", $1, "$zero", "$zero"); },
+    "mthi": function ($1) { return buildAsmInstructionRRR("__mthi", "$zero", $1, "$zero"); },
+    "mtlo": function ($1) { return buildAsmInstructionRRR("__mtlo", "$zero", $1, "$zero"); },
+    "jr": function ($1) { return buildAsmInstructionRRR("__jr", "$zero", $1, "$zero"); },
 };
-const PseudoRN = {
-    "bgez": ($1, num) => buildAsmInstructionRRN("__bgez", "$at", $1, num),
-    "bgtz": ($1, num) => buildAsmInstructionRRN("__bgtz", "$zero", $1, num),
-    "blez": ($1, num) => buildAsmInstructionRRN("__blez", "$zero", $1, num),
-    "bltz": ($1, num) => buildAsmInstructionRRN("__bltz", "$zero", $1, num),
-    "lui": ($1, num) => buildAsmInstructionRRN("__lui", $1, "$zero", num),
-    "li": ($1, num) => num > 0xFFFF ? [
+var PseudoRN = {
+    "bgez": function ($1, num) { return buildAsmInstructionRRN("__bgez", "$at", $1, num); },
+    "bgtz": function ($1, num) { return buildAsmInstructionRRN("__bgtz", "$zero", $1, num); },
+    "blez": function ($1, num) { return buildAsmInstructionRRN("__blez", "$zero", $1, num); },
+    "bltz": function ($1, num) { return buildAsmInstructionRRN("__bltz", "$zero", $1, num); },
+    "lui": function ($1, num) { return buildAsmInstructionRRN("__lui", $1, "$zero", num); },
+    "li": function ($1, num) { return num > 0xFFFF ? [
         buildAsmInstructionRRN("__lui", $1, "$zero", num >>> 16),
         buildAsmInstructionRRN("addi", $1, "$zero", num & 0xFFFF)
-    ] : buildAsmInstructionRRN("addi", $1, "$zero", num)
+    ] : buildAsmInstructionRRN("addi", $1, "$zero", num); }
 };
-const PesudoRRS = {
-    "sra": ($1, $2) => buildAsmInstructionRRR("__sra", $1, "$zero", $2),
-    "srl": ($1, $2) => buildAsmInstructionRRR("__srl", $1, "$zero", $2),
-    "sll": ($1, $2) => buildAsmInstructionRRR("__sll", $1, "$zero", $2),
+var PesudoRRS = {
+    "sra": function ($1, $2) { return buildAsmInstructionRRR("__sra", $1, "$zero", $2); },
+    "srl": function ($1, $2) { return buildAsmInstructionRRR("__srl", $1, "$zero", $2); },
+    "sll": function ($1, $2) { return buildAsmInstructionRRR("__sll", $1, "$zero", $2); },
 };
 function buildAsmInstructionRR(opcode, $1, $2) {
     if (!PseudoRR.hasOwnProperty(opcode)) {
-        console.log(`buildAsmFailed at ${opcode}`);
+        console.log("buildAsmFailed at " + opcode);
         return 0;
     }
     return PseudoRR[opcode]($1, $2);
@@ -143,10 +143,10 @@ exports.buildAsmInstructionRR = buildAsmInstructionRR;
 function buildAsmInstructionRRR(opcode, rd, rs, rt) {
     if (!OpCodeRRR.hasOwnProperty(opcode) || !FunctArith.hasOwnProperty(opcode) || !exports.Register.hasOwnProperty(rd) ||
         !exports.Register.hasOwnProperty(rs) || !exports.Register.hasOwnProperty(rt)) {
-        console.log(`buildAsmFailed at ${opcode}`);
+        console.log("buildAsmFailed at " + opcode);
         return 0;
     }
-    const op = OpCodeRRR[opcode], r1 = exports.Register[rd], r2 = exports.Register[rs], r3 = exports.Register[rt], funct = FunctArith[opcode];
+    var op = OpCodeRRR[opcode], r1 = exports.Register[rd], r2 = exports.Register[rs], r3 = exports.Register[rt], funct = FunctArith[opcode];
     return (op << 26) | (r2 << 21) | (r3 << 16) | (r1 << 11) | funct;
 }
 exports.buildAsmInstructionRRR = buildAsmInstructionRRR;
@@ -156,16 +156,16 @@ function buildAsmInstructionRRN(opcode, rt, rs, num) {
         !exports.Register.hasOwnProperty(rs)) {
         if (PesudoRRS.hasOwnProperty(opcode))
             return PesudoRRS[opcode](rt, rs) | ((num & 0x1F) << 6);
-        console.log(`buildAsmFailed at ${opcode}`);
+        console.log("buildAsmFailed at " + opcode);
         return 0;
     }
-    const op = OpCodeRRN[opcode], r1 = exports.Register[rt], r2 = exports.Register[rs], offset = num & 0xFFFF;
+    var op = OpCodeRRN[opcode], r1 = exports.Register[rt], r2 = exports.Register[rs], offset = num & 0xFFFF;
     return (op << 26) | (r2 << 21) | (r1 << 16) | offset;
 }
 exports.buildAsmInstructionRRN = buildAsmInstructionRRN;
 function buildAsmInstructionRN(opcode, $1, num) {
     if (!PseudoRN.hasOwnProperty(opcode)) {
-        console.log(`buildAsmFailed at ${opcode}`);
+        console.log("buildAsmFailed at " + opcode);
         return 0;
     }
     return PseudoRN[opcode]($1, num);
@@ -184,7 +184,7 @@ function buildAsmInstructionN(opcode, num) {
 exports.buildAsmInstructionN = buildAsmInstructionN;
 function buildAsmInstructionR(opcode, $1) {
     if (!PseudoR.hasOwnProperty(opcode)) {
-        console.log(`buildAsmFailed at ${opcode}`);
+        console.log("buildAsmFailed at " + opcode);
         return 0;
     }
     return PseudoR[opcode]($1);

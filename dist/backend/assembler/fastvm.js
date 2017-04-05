@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const instruction_1 = require("./instruction");
+var instruction_1 = require("./instruction");
 /**
  *  @file
  *  @author zcy <zurl@live.com>
@@ -15,12 +15,14 @@ exports.shamt_mask = 0x000007C0;
 exports.funct_mask = 0x0000003F;
 exports.imm_mask = 0x0000FFFF;
 exports.target_mask = 0x07FFFFFF;
-const $ra = 31;
-const $pc = 32;
-const $hi = 33;
-const $lo = 34;
-class MIPSVM {
-    constructor(os, memorySize = 1024 * 1024, initialBuffer = null) {
+var $ra = 31;
+var $pc = 32;
+var $hi = 33;
+var $lo = 34;
+var MIPSVM = (function () {
+    function MIPSVM(os, memorySize, initialBuffer) {
+        if (memorySize === void 0) { memorySize = 1024 * 1024; }
+        if (initialBuffer === void 0) { initialBuffer = null; }
         this.error = false;
         this.os = os;
         this.memorySize = memorySize;
@@ -32,52 +34,61 @@ class MIPSVM {
         this.registerBuffer = new ArrayBuffer(4 * (32 + 10)); // pc, ir
         this.register = new DataView(this.registerBuffer);
     }
-    setMemory(dataView) {
+    MIPSVM.prototype.setMemory = function (dataView) {
         this.memory = dataView;
-    }
-    cleanup() {
+    };
+    MIPSVM.prototype.cleanup = function () {
         this.error = false;
         this.PC = 0;
-        for (let i = 0; i <= 33; i++)
+        for (var i = 0; i <= 33; i++)
             this.register.setInt32(i * 4, 0);
-    }
-    get PC() {
-        return this.register.getUint32(4 * $pc);
-    }
-    set PC(value) {
-        this.register.setUint32(4 * $pc, value);
-    }
-    getInfo() {
-        return Object.keys(instruction_1.Register).map(name => [name,
-            this.register.getInt32(instruction_1.Register[name] * 4)
-        ]);
-    }
-    __mul_64($rs, $rt) {
+    };
+    Object.defineProperty(MIPSVM.prototype, "PC", {
+        get: function () {
+            return this.register.getUint32(4 * $pc);
+        },
+        set: function (value) {
+            this.register.setUint32(4 * $pc, value);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    MIPSVM.prototype.getInfo = function () {
+        var _this = this;
+        return Object.keys(instruction_1.Register).map(function (name) { return [name,
+            _this.register.getInt32(instruction_1.Register[name] * 4)
+        ]; });
+    };
+    MIPSVM.prototype.__mul_64 = function ($rs, $rt) {
         this.register.setInt32($hi * 4, (this.register.getInt32($rs * 4) * this.register.getInt32($rt * 4)) >> 32);
         this.register.setInt32($lo * 4, (this.register.getInt32($rs * 4) % 2140000000) * (this.register.getInt32($rt * 4) % 2140000000));
-    }
-    run(end) {
-        const that = this;
-        const next_task = () => {
-            this.PC += 4;
-            if (this.PC != end)
+    };
+    MIPSVM.prototype.run = function (end) {
+        var _this = this;
+        var that = this;
+        var next_task = function () {
+            _this.PC += 4;
+            if (_this.PC != end)
                 that.__exec(next_task);
         };
         that.__exec(next_task);
-    }
-    runLine() {
-        this.__exec(() => {
-            this.PC += 4;
+    };
+    MIPSVM.prototype.runLine = function (cb) {
+        var _this = this;
+        this.__exec(function () {
+            _this.PC += 4;
+            cb();
         });
-    }
-    __exec(next_task) {
-        const ins = this.memory.getUint32(this.PC);
-        const opcode = ins >>> 26;
-        const rs = (ins & exports.$1_mask) >> 21;
-        const rt = (ins & exports.$2_mask) >> 16;
+    };
+    MIPSVM.prototype.__exec = function (next_task) {
+        var ins = this.memory.getUint32(this.PC);
+        console.log(ins.toString(16));
+        var opcode = ins >>> 26;
+        var rs = (ins & exports.$1_mask) >> 21;
+        var rt = (ins & exports.$2_mask) >> 16;
         if (opcode == 0x00) {
-            const funct = ins & exports.funct_mask;
-            const rd = (ins & exports.$3_mask) >> 11;
+            var funct = ins & exports.funct_mask;
+            var rd = (ins & exports.$3_mask) >> 11;
             //console.log(rd + " :" + funct);
             switch (funct) {
                 // "sllv":  0x04,
@@ -187,7 +198,7 @@ class MIPSVM {
             setTimeout(next_task, 0);
             return;
         }
-        const imm = this.memory.getInt16(this.PC + 2);
+        var imm = this.memory.getInt16(this.PC + 2);
         switch (opcode) {
             // "j" :   0x2,
             case 0x02:
@@ -297,7 +308,8 @@ class MIPSVM {
                 throw "error2 " + opcode;
         }
         setTimeout(next_task, 0);
-    }
-}
+    };
+    return MIPSVM;
+}());
 exports.MIPSVM = MIPSVM;
 //# sourceMappingURL=fastvm.js.map

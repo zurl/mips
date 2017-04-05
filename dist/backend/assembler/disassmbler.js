@@ -13,7 +13,23 @@ exports.shamt_mask = 0x000007C0;
 exports.funct_mask = 0x0000003F;
 exports.imm_mask = 0x0000FFFF;
 exports.target_mask = 0x07FFFFFF;
-exports.registerTable = new Map([
+var MyMap = (function () {
+    function MyMap(arr) {
+        var _this = this;
+        this.data = {};
+        arr.forEach(function (x) {
+            _this.data[x[0].toString()] = x[1];
+        });
+    }
+    MyMap.prototype.has = function (x) {
+        return this.data.hasOwnProperty(x);
+    };
+    MyMap.prototype.get = function (x) {
+        return this.data[x];
+    };
+    return MyMap;
+}());
+exports.registerTable = new MyMap([
     [0, "$zero"], [1, "$at"], [2, "$v0"], [3, "$v1"],
     [4, "$a0"], [5, "$a1"], [6, "$a2"], [7, "$a3"],
     [8, "$t0"], [9, "$t1"], [10, "$t2"], [11, "$t3"], [12, "$t4"], [13, "$t5"], [14, "$t6"], [15, "$t7"],
@@ -22,7 +38,7 @@ exports.registerTable = new Map([
     [28, "$gp"], [29, "$sp"], [30, "$fp"], [31, "$ra"],
     [32, "$pc"]
 ]);
-const opcodeTable = new Map([
+var opcodeTable = new MyMap([
     [0x2, "j"],
     [0x4, "beq"],
     [0x5, "bne"],
@@ -35,7 +51,7 @@ const opcodeTable = new Map([
     [0xa, "slti"],
     [0xb, "sltiu"]
 ]);
-const opcodeTableOffset = new Map([
+var opcodeTableOffset = new MyMap([
     [0x20, "lb"],
     [0x21, "lh"],
     [0x23, "lw"],
@@ -45,12 +61,12 @@ const opcodeTableOffset = new Map([
     [0x24, "lbu"],
     [0x25, "lhu"],
 ]);
-const opcodeTableOffsetRN = new Map([
+var opcodeTableOffsetRN = new MyMap([
     [0x7, "bgtz"],
     [0x6, "blez"],
     [0xf, "lui"],
 ]);
-const functTableRRR = new Map([
+var functTableRRR = new MyMap([
     [0x20, "add"],
     [0x21, "addu"],
     [0x22, "sub"],
@@ -65,89 +81,102 @@ const functTableRRR = new Map([
     [0x06, "srlv"],
     [0x07, "srav"],
 ]);
-const functTableRRS = new Map([
+var functTableRRS = new MyMap([
     [0x00, "sll"],
     [0x02, "srl"],
     [0x03, "sra"],
 ]);
-const functTableRR = new Map([
+var functTableRR = new MyMap([
     [0x09, "jalr"],
     [0x18, "mult"],
     [0x19, "multu"],
     [0x1a, "div"],
     [0x1b, "divu"],
 ]);
-const functTableR = new Map([
+var functTableR = new MyMap([
     [0x10, "mfhi"],
     [0x12, "mflo"],
     [0x11, "mthi"],
     [0x13, "mtlo"],
     [0x8, "jr"]
 ]);
-const convertArrayBuffer = new ArrayBuffer(16);
-const convertDataView = new DataView(convertArrayBuffer);
+var convertArrayBuffer = new ArrayBuffer(16);
+var convertDataView = new DataView(convertArrayBuffer);
 function get16bitcomp(int) {
     convertDataView.setUint16(0, int);
     return convertDataView.getInt16(0);
 }
-function disassmble(ins) {
-    const opcode = (ins & exports.op_mask) >>> 26;
-    const rs = exports.registerTable.get((ins & exports.$1_mask) >>> 21);
-    const rt = exports.registerTable.get((ins & exports.$2_mask) >>> 16);
-    const rd = exports.registerTable.get((ins & exports.$3_mask) >>> 11);
-    const shamt = (ins & exports.shamt_mask) >> 6;
-    const imm = get16bitcomp(ins & exports.imm_mask);
-    const funct = ins & exports.funct_mask;
+function disassmble(ins, ctx, line) {
+    // line => 1234
+    var crela = function (imm) {
+        ctx[imm + line] = true;
+        return (imm + line);
+    };
+    var cabsa = function (imm) {
+        ctx[imm] = true;
+        return imm;
+    };
+    var opcode = (ins & exports.op_mask) >>> 26;
+    var rs = exports.registerTable.get((ins & exports.$1_mask) >>> 21);
+    var rt = exports.registerTable.get((ins & exports.$2_mask) >>> 16);
+    var rd = exports.registerTable.get((ins & exports.$3_mask) >>> 11);
+    var shamt = (ins & exports.shamt_mask) >> 6;
+    var imm = get16bitcomp(ins & exports.imm_mask);
+    var funct = ins & exports.funct_mask;
     if (opcode == 0) {
         if (funct == 0x0 && rs == '$zero' && rt == '$zero') {
-            return `nop;`;
+            return "nop; ";
         }
         else if (functTableRRS.has(funct)) {
-            const shamt = (ins & exports.shamt_mask) >>> 6;
-            return `${functTableRRS.get(funct)} ${rd}, ${rt}, ${shamt};`;
+            var shamt_1 = (ins & exports.shamt_mask) >>> 6;
+            return functTableRRS.get(funct) + " " + rd + ", " + rt + ", " + shamt_1 + "; ";
         }
         else if (functTableRRR.has(funct))
-            return `${functTableRRR.get(funct)} ${rd}, ${rs}, ${rt};`;
+            return functTableRRR.get(funct) + " " + rd + ", " + rs + ", " + rt + "; ";
         else if (functTableRR.has(funct)) {
             if (funct == 0x9)
-                return `${functTableRR.get(funct)} ${rd}, ${rs};`;
+                return functTableRR.get(funct) + " " + rd + ", " + rs + "; ";
             else
-                return `${functTableRR.get(funct)} ${rs}, ${rt};`;
+                return functTableRR.get(funct) + " " + rs + ", " + rt + "; ";
         }
         else if (functTableR.has(funct)) {
-            const reg = (funct == 0x12 || funct == 0x10) ? rd : rs;
-            return `${functTableR.get(funct)} ${reg};`;
+            var reg = (funct == 0x12 || funct == 0x10) ? rd : rs;
+            return functTableR.get(funct) + " " + reg + "; ";
         }
         else if (funct == 0xc) {
-            return `syscall;`;
+            return "syscall; ";
         }
         else if (funct == 0xd) {
-            return `break ${ins >> 6};`;
+            return "break " + (ins >> 6) + "; ";
         }
         else
             return "";
     }
     else if (opcode == 0x1) {
         if (rt == "$at")
-            return `bgez $ ${rs}, ${imm};`;
+            return "bgez " + rs + ", LABEL_" + crela(imm) + "; ";
         else
-            return `bltz $ ${rs}, ${imm};`;
+            return "bltz " + rs + ", LABEL_" + crela(imm) + "; ";
     }
     else if (opcode == 0x2) {
-        return `j ${imm};`;
+        return "j LABEL_" + cabsa(imm) + "; ";
     }
     else if (opcode == 0x3) {
-        return `jal ${imm};`;
+        return "jal LABEL_" + cabsa(imm) + "; ";
     }
     else if (opcodeTableOffsetRN.has(opcode)) {
-        const reg = opcode != 0xf ? rs : rt;
-        return `${opcodeTableOffsetRN.get(opcode)} ${reg}, ${imm};`;
+        var reg = opcode != 0xf ? rs : rt;
+        if (opcode != 0xf)
+            imm = "LABEL_" + crela(imm);
+        return opcodeTableOffsetRN.get(opcode) + " " + reg + ", " + imm + "; ";
     }
     else if (opcodeTable.has(opcode)) {
-        return `${opcodeTable.get(opcode)} ${rt}, ${rs}, ${imm};`;
+        if (opcode == 4 || opcode == 5)
+            imm = "LABEL_" + crela(imm);
+        return opcodeTable.get(opcode) + " " + rt + ", " + rs + ", " + imm + "; ";
     }
     else if (opcodeTableOffset.has(opcode)) {
-        return `${opcodeTableOffset.get(opcode)} ${rt}, ${imm}(${rs});`;
+        return opcodeTableOffset.get(opcode) + " " + rt + ", " + imm + "(" + rs + "); ";
     }
     return "";
 }

@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const assembler_1 = require("./assembler");
-const asm_test_1 = require("./asm_test");
-const disassmbler_1 = require("./disassmbler");
+var assembler_1 = require("./assembler");
+var asm_test_1 = require("./asm_test");
 /**
  *  @file
  *  @author zcy <zurl@live.com>
@@ -21,14 +20,10 @@ function addFrontZero(str) {
     return str.substring(str.length - 8, str.length);
 }
 function view(int) {
-    return `raw: ${addFrontZero(int.toString(16))} opcode :${(int & exports.op_mask) >> 26}; $1 : ${(int & exports.$1_mask) >> 21}; $2 : ${(int & exports.$2_mask) >> 16};`
-        + `$3 : ${(int & exports.$3_mask) >> 11}; shamt : ${(int & exports.shamt_mask) >> 6}; funct  ${(int & exports.funct_mask)}`
-        + `imm : ${(int & exports.imm_mask)}`;
+    return "raw: " + addFrontZero(int.toString(16)) + " opcode :" + ((int & exports.op_mask) >> 26) + "; $1 : " + ((int & exports.$1_mask) >> 21) + "; $2 : " + ((int & exports.$2_mask) >> 16) + ";"
+        + ("$3 : " + ((int & exports.$3_mask) >> 11) + "; shamt : " + ((int & exports.shamt_mask) >> 6) + "; funct  " + (int & exports.funct_mask))
+        + ("imm : " + (int & exports.imm_mask));
 }
-const asmer = new assembler_1.MIPSAssembler();
-const program = asmer.parse(asm_test_1.default);
-for (let i = 0; i <= 50; i++) {
-    let x = program.getUint32(i * 4);
-    console.log(`${addFrontZero((i * 4).toString(16))}:${addFrontZero(x.toString(16))}###` + disassmbler_1.disassmble(x));
-}
+var asmer = new assembler_1.MIPSAssembler();
+var program = asmer.parse(asm_test_1.default);
 //# sourceMappingURL=main.js.map

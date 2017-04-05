@@ -13,20 +13,59 @@ function addFrontZero(str: string){
     return str.substring(str.length-8,str.length);
 }
 
-const assembler = new MIPSAssembler();
-const vm = new MIPSVM(new WebOS());
+let assembler = new MIPSAssembler();
+let vm = new MIPSVM(new WebOS());
 
+let disdata = [];
+let ctx = [];
 export function assemble(text){
-    return assembler.parse(text);
+    assembler = new MIPSAssembler();
+    vm = new MIPSVM(new WebOS());
+    console.log(text);
+    const ret = assembler.parse(text);
+    const memory = assembler.__program;
+    disdata=[];ctx=[];
+    for(let i =0; i < 1024;i ++){
+        const x = memory.getUint32(i * 4);
+        disdata.push([
+            addFrontZero((i * 4).toString(16)),
+            addFrontZero(x.toString(16)),
+            disassmble(x, ctx, i )
+        ])
+    }
+    return ret;
+}
+export function decodeBIN(file){
+    console.log(file);
+    const tmp = [];
+    for(let i = 0; i < 1024 / 4; i++){
+        console.log(file.readUInt32BE(i*4).toString(16));
+        tmp[i] = disassmble(file.readUInt32BE(i*4), ctx, i);
+    }
+    let ret = "";
+    for(let i = 0; i < 256; i++){
+        if(ctx[i]) ret+= `LABEL_${i}: `;
+        ret+=tmp[i] + "\n";
+    }
+    return ret;
+}
+export function decodeCOE(file){
+    const arr = file.split('=')[2].split(/\s*,\s*/).map(x=>parseInt(x,16));
+    const tmp = [];
+    for(let i = 0; i < 1024 / 4; i++){
+        tmp[i] = disassmble(arr[i], ctx, i);
+    }
+    let ret = "";
+    for(let i = 0; i < 256; i++){
+        if(ctx[i]) ret+= `LABEL_${i}: `;
+        ret+=tmp[i] + "\n";
+    }
+    return ret;
 }
 
 export function getAsmViewData(memory, i){
-    const x = memory.getUint32(i);
-    return [
-            addFrontZero((i).toString(16)),
-            addFrontZero(x.toString(16)),
-            disassmble(x)
-    ];
+    if(i > 1024)return [];
+    return disdata[i].concat(ctx[i]);
 }
 
 export function initvm(memory){
@@ -35,8 +74,8 @@ export function initvm(memory){
     window["vm"] = vm;
 }
 
-export function runline(){
-    vm.runLine();
+export function runline(cb){
+    vm.runLine(cb);
 }
 
 export function getRegisterInfo(){

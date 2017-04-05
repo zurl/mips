@@ -1,58 +1,62 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const ins_1 = require("./ins");
+var ins_1 = require("./ins");
 function isArray(arr) {
     return Object.prototype.toString.call(arr) === "[object Array]";
 }
 function convertStrToArray(str) {
-    const result = [];
-    for (let i = 1; i < str.length - 2; i++) {
+    var result = [];
+    for (var i = 1; i < str.length - 2; i++) {
         result.push(str.charCodeAt(i));
     }
     return result;
 }
-class MIPSAssembler {
-    constructor(memorySize = 1024 * 1024) {
-        this.__hashString = (str, delta = true) => {
+var MIPSAssembler = (function () {
+    function MIPSAssembler(memorySize) {
+        if (memorySize === void 0) { memorySize = 1024 * 1024; }
+        var _this = this;
+        this.__hashString = function (str, delta) {
+            if (delta === void 0) { delta = true; }
             if (!isNaN(parseInt(str)))
                 return parseInt(str);
-            if (this.__resolvedLabelSet.has(str)) {
+            if (_this.__resolvedLabelSet.hasOwnProperty(str)) {
                 if (delta)
-                    return (this.__resolvedLabelSet.get(str) - this.__now) / 4;
+                    return (_this.__resolvedLabelSet[str] - _this.__now) / 4;
                 else
-                    return this.__resolvedLabelSet.get(str);
+                    return _this.__resolvedLabelSet[str] / 4;
             }
             else {
-                if (this.__unresolvedLabelSet.get(str))
-                    this.__unresolvedLabelSet.get(str).push(this.__now);
+                if (_this.__unresolvedLabelSet.hasOwnProperty(str))
+                    _this.__unresolvedLabelSet[str].push(_this.__now);
                 else
-                    this.__unresolvedLabelSet.set(str, [this.__now]);
+                    _this.__unresolvedLabelSet[str] = [_this.__now];
                 return 0;
             }
         };
         this.__programBuffer = new ArrayBuffer(memorySize);
         this.__program = new DataView(this.__programBuffer);
-        this.__resolvedLabelSet = new Map([]);
-        this.__unresolvedLabelSet = new Map([]);
+        this.__resolvedLabelSet = {};
+        this.__unresolvedLabelSet = {};
     }
-    __resolveLabel(label) {
-        this.__resolvedLabelSet.set(label, this.__now);
-        if (this.__unresolvedLabelSet.has(label)) {
-            this.__unresolvedLabelSet.get(label).forEach(line => {
-                if ((this.__program.getInt32(line) & 0xFC000000) == 0x8000000 // jmp
-                    || (this.__program.getInt32(line) & 0xFC000000) == 0xc000000) {
-                    this.__program.setInt32(line, this.__program.getInt32(line) | (this.__now & 0x03FFFFFF));
+    MIPSAssembler.prototype.__resolveLabel = function (label) {
+        var _this = this;
+        this.__resolvedLabelSet[label] = this.__now;
+        if (this.__unresolvedLabelSet.hasOwnProperty(label)) {
+            this.__unresolvedLabelSet[label].forEach(function (line) {
+                if ((_this.__program.getInt32(line) & 0xFC000000) == 0x8000000 // jmp
+                    || (_this.__program.getInt32(line) & 0xFC000000) == 0xc000000) {
+                    _this.__program.setInt32(line, _this.__program.getInt32(line) | ((_this.__now / 4) & 0x03FFFFFF));
                 }
                 else {
-                    this.__program.setInt16(line + 2, (this.__now - line) / 4);
+                    _this.__program.setInt16(line + 2, (_this.__now - line) / 4);
                 }
             });
         }
-    }
-    __buildData(arr) {
+    };
+    MIPSAssembler.prototype.__buildData = function (arr) {
         if (/dd|db|dw/.test(arr[1])) {
-            const data = arr[2].split(/\s*,\s*/);
-            for (let i = 0; i < data.length; i++) {
+            var data = arr[2].split(/\s*,\s*/);
+            for (var i = 0; i < data.length; i++) {
                 if (!isNaN(parseInt(data[i]))) {
                     if (arr[1] == 'dd') {
                         this.__program.setUint32(this.__now, parseInt(data[i]));
@@ -68,8 +72,9 @@ class MIPSAssembler {
                     }
                 }
                 else if (/^'.*'$/.test(data[i])) {
-                    const arr = convertStrToArray(data[i]);
-                    for (let item of arr) {
+                    var arr_1 = convertStrToArray(data[i]);
+                    for (var _i = 0, arr_2 = arr_1; _i < arr_2.length; _i++) {
+                        var item = arr_2[_i];
                         this.__program.setUint8(this.__now, item);
                         this.__now += 1;
                     }
@@ -83,8 +88,8 @@ class MIPSAssembler {
             this.__now += parseInt(arr[1]);
         }
         return false; // failed
-    }
-    __buildIns(arr) {
+    };
+    MIPSAssembler.prototype.__buildIns = function (arr) {
         if (arr[3]) {
             if (arr[4]) {
                 if (arr[4].charAt(0) == '$') {
@@ -116,52 +121,53 @@ class MIPSAssembler {
         else {
             return ins_1.buildAsm(arr[1], (this.__hashString(arr[2], false)) & 0x03FFFFFF, null, null);
         }
-    }
-    parse(source) {
-        const code = source.toLowerCase().split('\n');
+    };
+    MIPSAssembler.prototype.parse = function (source) {
+        var _this = this;
+        var code = source.toLowerCase().split('\n');
         this.__now = 0;
-        for (let index = 0; index < code.length; index++) {
-            let ins = code[index];
+        for (var index = 0; index < code.length; index++) {
+            var ins = code[index];
             ins = ins.replace(/#.*|\/\/.*$/, "");
-            const labelResult = /^\s*([a-z0-9_]+)\s*:/.exec(ins);
+            var labelResult = /^\s*([a-z0-9_]+)\s*:/.exec(ins);
             if (labelResult) {
                 ins = ins.replace(/^\s*([a-z0-9_]+)\s*:/, "");
                 if ((labelResult[1] == "baseaddre" || labelResult[1] == "dataaddre")
                     && /^\s*[0-9a-f]+\s*;\s*$/.test(ins)) {
-                    const address = parseInt(ins, 16);
+                    var address = parseInt(ins, 16);
                     if (isNaN(address))
-                        console.log(`failed at ${index}`);
+                        console.log("failed at " + index);
                     else if (address < this.__now)
-                        console.log(`failed at ${index} : illegal address`);
+                        console.log("failed at " + index + " : illegal address");
                     else
                         this.__now = address;
                     continue;
                 }
                 this.__resolveLabel(labelResult[1]);
             }
-            const dataResult = /^\s*(dd|dw|db|resb|resw|resd)\s*(.+\s*);\s*$/.exec(ins);
+            var dataResult = /^\s*(dd|dw|db|resb|resw|resd)\s*(.+\s*);\s*$/.exec(ins);
             if (dataResult && this.__buildData(dataResult))
                 continue;
-            const insResult = /^\s*([a-z]+)\s+([$a-z0-9_-]+)\s*(?:,\s*([$a-z0-9_-]+)\s*(?:(?:,\s*([$a-z0-9_-]+)\s*)|(?:\(\s*([$a-z0-9_-]+)\s*\)))?)?;\s*$/.exec(ins);
+            var insResult = /^\s*([a-z]+)\s+([$a-z0-9_-]+)\s*(?:,\s*([$a-z0-9_-]+)\s*(?:(?:,\s*([$a-z0-9_-]+)\s*)|(?:\(\s*([$a-z0-9_-]+)\s*\)))?)?;\s*$/.exec(ins);
             if (insResult) {
                 try {
-                    const ret = this.__buildIns(insResult);
+                    var ret = this.__buildIns(insResult);
                     if (!isArray(ret)) {
                         this.__program.setUint32(this.__now, ret);
                         this.__now += 4;
                         continue;
                     }
                     else {
-                        ret["forEach"]((x) => {
-                            this.__program.setUint32(this.__now, x);
-                            this.__now += 4;
+                        ret["forEach"](function (x) {
+                            _this.__program.setUint32(_this.__now, x);
+                            _this.__now += 4;
                         });
                         continue;
                     }
                 }
                 catch (e) {
-                    window["logger"].log(`failed at ${index} : ${ins}`);
-                    console.log(`failed at ${index}`);
+                    window["logger"].log("failed at " + index + " : " + ins);
+                    console.log("failed at " + index);
                     continue;
                 }
             }
@@ -176,12 +182,13 @@ class MIPSAssembler {
                 continue;
             }
             if (/\S/.test(ins)) {
-                window["logger"].log(`failed at ${index} : ${ins}`);
-                console.log(`failed at ${index}`);
+                window["logger"].log("failed at " + index + " : " + ins);
+                console.log("failed at " + index);
             }
         }
         return this.__program;
-    }
-}
+    };
+    return MIPSAssembler;
+}());
 exports.MIPSAssembler = MIPSAssembler;
 //# sourceMappingURL=assembler.js.map
