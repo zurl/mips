@@ -1,0 +1,24 @@
+{
+  "name": "mips",
+  "version": "1.0.0",
+  "description": "an mips cpu",
+  "main": "webpack.config.js",
+  "scripts": {
+    "dev": "webpack-dev-server -d --inline --hot --env.dev",
+    "build": "rimraf dist && webpack -p --progress --hide-modules"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zurl/mips.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zurl/mips/issues"
+  },
+  "homepage": "https://github.com/zurl/mips#readme",
+  "dependencies": {
+    "element-ui": "^1.2.3",
+    "vue": "^2.2.1"
+  }
+}
