@@ -21,7 +21,7 @@ var MIPSAssembler = (function () {
                 return parseInt(str);
             if (_this.__resolvedLabelSet.hasOwnProperty(str)) {
                 if (delta)
-                    return (_this.__resolvedLabelSet[str] - _this.__now) / 4;
+                    return (_this.__resolvedLabelSet[str] - _this.__now) / 4 - 1;
                 else
                     return _this.__resolvedLabelSet[str] / 4;
             }
@@ -48,7 +48,7 @@ var MIPSAssembler = (function () {
                     _this.__program.setInt32(line, _this.__program.getInt32(line) | ((_this.__now / 4) & 0x03FFFFFF));
                 }
                 else {
-                    _this.__program.setInt16(line + 2, (_this.__now - line) / 4);
+                    _this.__program.setInt16(line + 2, (_this.__now - line) / 4 - 1);
                 }
             });
         }
@@ -90,6 +90,8 @@ var MIPSAssembler = (function () {
         return false; // failed
     };
     MIPSAssembler.prototype.__buildIns = function (arr) {
+        if (arr[5] && arr[3] == "")
+            arr[3] = "0"; //trick;
         if (arr[3]) {
             if (arr[4]) {
                 if (arr[4].charAt(0) == '$') {
@@ -124,11 +126,12 @@ var MIPSAssembler = (function () {
     };
     MIPSAssembler.prototype.parse = function (source) {
         var _this = this;
+        window["woc"] = source;
         var code = source.toLowerCase().split('\n');
         this.__now = 0;
         for (var index = 0; index < code.length; index++) {
             var ins = code[index];
-            ins = ins.replace(/#.*|\/\/.*$/, "");
+            ins = ins.replace(/((#)|(\/\/)).*/g, "");
             var labelResult = /^\s*([a-z0-9_]+)\s*:/.exec(ins);
             if (labelResult) {
                 ins = ins.replace(/^\s*([a-z0-9_]+)\s*:/, "");
@@ -145,11 +148,12 @@ var MIPSAssembler = (function () {
                 }
                 this.__resolveLabel(labelResult[1]);
             }
-            var dataResult = /^\s*(dd|dw|db|resb|resw|resd)\s*(.+\s*);\s*$/.exec(ins);
+            var dataResult = /^\s*(dd|dw|db|resb|resw|resd)\s*(.+\s*);?\s*$/.exec(ins);
             if (dataResult && this.__buildData(dataResult))
                 continue;
-            var insResult = /^\s*([a-z]+)\s+([$a-z0-9_-]+)\s*(?:,\s*([$a-z0-9_-]+)\s*(?:(?:,\s*([$a-z0-9_-]+)\s*)|(?:\(\s*([$a-z0-9_-]+)\s*\)))?)?;\s*$/.exec(ins);
+            var insResult = /^\s*([a-z]+)\s+([$a-z0-9_-]+)\s*(?:,\s*([$a-z0-9_-]*)\s*(?:(?:,\s*([$a-z0-9_-]+)\s*)|(?:\(\s*([$a-z0-9_-]+)\s*\)))?)?;?\s*$/.exec(ins);
             if (insResult) {
+                console.log(insResult);
                 try {
                     var ret = this.__buildIns(insResult);
                     if (!isArray(ret)) {
@@ -171,12 +175,12 @@ var MIPSAssembler = (function () {
                     continue;
                 }
             }
-            if (/^\s*syscall\s*;\s*$/.test(ins)) {
+            if (/^\s*syscall\s*;?\s*$/.test(ins)) {
                 this.__program.setUint32(this.__now, 0xc);
                 this.__now += 4;
                 continue;
             }
-            else if (/^\s*nop\s*;\s*$/.test(ins)) {
+            else if (/^\s*nop\s*;?\s*$/.test(ins)) {
                 this.__program.setUint32(this.__now, 0x0);
                 this.__now += 4;
                 continue;

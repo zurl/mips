@@ -16,7 +16,7 @@ var reg = {
 var ins = {
     rrr: function (op, funct) { return function (rd, rs, rt, imm) { return (op << 26) | (reg[rs] << 21) | (reg[rt] << 16) | (reg[rd] << 11) | funct; }; },
     rrn: function (op) { return function (rd, rs, rt, imm) { return (op << 26) | (reg[rs] << 21) | (reg[rt] << 16) | (imm & 0xFFFF); }; },
-    rrs: function (op, funct) { return function (rd, rs, rt, imm) { return (op << 26) | (reg[rs] << 21) | (reg[rt] << 16) | ((imm & 0x1F) << 6) | funct; }; },
+    rrs: function (op, funct) { return function (rd, rs, rt, imm) { return (op << 26) | (reg[rs] << 21) | (reg[rt] << 16) | (reg[rd] << 11) | ((imm & 0x1F) << 6) | funct; }; },
 };
 var mapper = {
     st: function ($1, $2, $3) { return [0, $1, $2, 0]; },
@@ -29,6 +29,7 @@ var mapper = {
     d: function ($1, $2, $3) { return [$1, 0, 0, 0]; },
     s: function ($1, $2, $3) { return [0, $1, 0, 0]; },
     si: function (rt) { return function ($1, $2, $3) { return [0, $1, rt, $3]; }; },
+    ti: function ($1, $2, $3) { return [0, 0, $1, $2]; },
 };
 var checker = {
     r: function ($1, $2, $3) { return reg.hasOwnProperty($1); },
@@ -77,7 +78,6 @@ var op = {
     "andi": [ins.rrn(0x0C), mapper.tsi, checker.rrn],
     "ori": [ins.rrn(0x0D), mapper.tsi, checker.rrn],
     "xori": [ins.rrn(0x0E), mapper.tsi, checker.rrn],
-    "lui": [ins.rrn(0x0F), mapper.tsi, checker.rrn],
     "slti": [ins.rrn(0x0A), mapper.tsi, checker.rrn],
     "sltiu": [ins.rrn(0x0B), mapper.tsi, checker.rrn],
     "beq": [ins.rrn(0x04), mapper.sti, checker.rrn],
@@ -89,6 +89,7 @@ var op = {
     "srl": [ins.rrs(0x00, 0x02), mapper.dti, checker.rrn],
     "sll": [ins.rrs(0x00, 0x00), mapper.dti, checker.rrn],
     "sra": [ins.rrs(0x00, 0x03), mapper.dti, checker.rrn],
+    "lui": [ins.rrn(0xf), mapper.ti, checker.rn],
     "j": [function ($) { return $ | (0x2 << 26); }, function ($) { return [$]; }, checker.n],
     "jal": [function ($) { return $ | (0x3 << 26); }, function ($) { return [$]; }, checker.n],
     "break": [function ($) { return ($ << 6) | 0x0d; }, function ($) { return [$]; }, checker.n],

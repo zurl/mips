@@ -94,7 +94,7 @@ define("ace/mode/assembly_x86_highlight_rules", ["require", "exports", "module",
             }],
             rnrn1: [{
                 token: 'constant.character.decimal',
-                regex: '-?\\b[0-9]+\\b',
+                regex: '(-?\\b[0-9xabcdef]+\\b)?',
                 next: 'rnrb1'
 
             }],
@@ -160,7 +160,7 @@ define("ace/mode/assembly_x86_highlight_rules", ["require", "exports", "module",
             }],
             rrrn1: [{
                 token: 'constant.character.decimal',
-                regex: '-?\\b[0-9]+\\b',
+                regex: '-?\\b[0-9xabcdef]+\\b',
                 next: 'end'
             }],
             rrwr1: [{
@@ -185,12 +185,12 @@ define("ace/mode/assembly_x86_highlight_rules", ["require", "exports", "module",
             }],
             rrww1: [{
                 token: 'support.parameter.rw.label',
-                regex: '\\b(?:[a-zA-Z0-9]*)\\b',
+                regex: '\\b(?:[a-zA-Z0-9x]*)\\b',
                 next: 'end'
             }],
             end: [{
                 token: 'keyword.assembly.end',
-                regex: '\\s*;\\s*',
+                regex: '\\s*;?\\s*',
                 next: 'start'
             }]
         }, this.normalizeRules()

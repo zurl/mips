@@ -109,8 +109,8 @@ function get16bitcomp(int) {
 function disassmble(ins, ctx, line) {
     // line => 1234
     var crela = function (imm) {
-        ctx[imm + line] = true;
-        return (imm + line);
+        ctx[imm + line + 1] = true;
+        return (imm + line + 1);
     };
     var cabsa = function (imm) {
         ctx[imm] = true;
@@ -171,8 +171,10 @@ function disassmble(ins, ctx, line) {
         return opcodeTableOffsetRN.get(opcode) + " " + reg + ", " + imm + "; ";
     }
     else if (opcodeTable.has(opcode)) {
-        if (opcode == 4 || opcode == 5)
+        if (opcode == 4 || opcode == 5) {
             imm = "LABEL_" + crela(imm);
+            return opcodeTable.get(opcode) + " " + rs + ", " + rt + ", " + imm + "; ";
+        }
         return opcodeTable.get(opcode) + " " + rt + ", " + rs + ", " + imm + "; ";
     }
     else if (opcodeTableOffset.has(opcode)) {

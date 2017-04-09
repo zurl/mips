@@ -63,9 +63,6 @@ var UtilMenu = (function (_super) {
     function UtilMenu(props) {
         var _this = _super.call(this, props) || this;
         _this.open = function (mode) { return function () {
-            if (_this.props.filePath) {
-                _this.close();
-            }
             var path = dialog.showOpenDialog({ properties: ['openFile'] });
             if (path.length == 0)
                 return;
@@ -88,7 +85,7 @@ var UtilMenu = (function (_super) {
             }
         }; };
         _this.saveThis = function () {
-            window["codeStorage"] = window["editor"].getValue();
+            //  window["codeStorage"] = window["editor"].getValue();
             fs.writeFileSync(_this.props.filePath, window["codeStorage"], "utf8");
         };
         _this.save = function (mode) { return function () {
@@ -135,7 +132,7 @@ var UtilMenu = (function (_super) {
         _this.close = function () {
             _this.props.setFilePath(null);
             window["codeStorage"] = '';
-            window["editor"].setValue('');
+            window["editor"].setValue(' ');
             _this.props.onClose('');
         };
         return _this;
@@ -316,6 +313,7 @@ var Application = (function (_super) {
             if (window["readOnly"])
                 return;
             if (_this.state.onResultView) {
+                //window["codeStorage"]='';
                 _this.setState({ onResultView: false });
             }
             else {
@@ -335,13 +333,9 @@ var Application = (function (_super) {
             }
         };
         _this.updateView = function (mode) { return function () {
-            if (mode = 'asm') {
-                if (_this.state.onResultView) {
-                    _this.setState({ onResultView: false });
-                    console.log('shit');
-                }
-                window["editor"].setValue(window["codeStorage_t"]);
-            }
+            // if( mode == 'asm'){
+            window["editor"].setValue(window["codeStorage_t"]);
+            // }
             _this.handleCreate('');
             //window["codeStorage"] = window["codeStorage_t"];
         }; };

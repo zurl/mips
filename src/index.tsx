@@ -72,9 +72,6 @@ class UtilMenu extends Component<any, any>{
     }
 
     open = (mode) => () => {
-        if(this.props.filePath){
-            this.close();
-        }
         let path = dialog.showOpenDialog({properties: ['openFile']});
         if(path.length == 0)return;
         this.props.setFilePath(path[0]);
@@ -99,7 +96,7 @@ class UtilMenu extends Component<any, any>{
     };
 
     saveThis = ()=>{
-        window["codeStorage"] = window["editor"].getValue();
+        //  window["codeStorage"] = window["editor"].getValue();
         fs.writeFileSync(this.props.filePath,window["codeStorage"], "utf8")
     };
 
@@ -148,7 +145,7 @@ class UtilMenu extends Component<any, any>{
     close = ()=>{
         this.props.setFilePath(null);
         window["codeStorage"] = '';
-        window["editor"].setValue('');
+        window["editor"].setValue(' ');
         this.props.onClose('');
     };
 
@@ -402,6 +399,7 @@ class Application extends React.Component<any, any>{
     handleChangeView = ()=>{
         if(window["readOnly"])return;
         if( this.state.onResultView){
+            //window["codeStorage"]='';
             this.setState( {onResultView: false });
         }
         else{
@@ -422,13 +420,9 @@ class Application extends React.Component<any, any>{
     };
 
     updateView = (mode)=> () =>{
-        if( mode = 'asm'){
-            if( this.state.onResultView){
-                this.setState( {onResultView: false });
-                console.log('shit');
-            }
-            window["editor"].setValue(window["codeStorage_t"])
-        }
+       // if( mode == 'asm'){
+        window["editor"].setValue(window["codeStorage_t"])
+       // }
         this.handleCreate('');
         //window["codeStorage"] = window["codeStorage_t"];
     };
